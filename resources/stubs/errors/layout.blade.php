@@ -21,13 +21,12 @@
             .actions a { padding: 0.5rem 1rem; border: 1px solid var(--line); border-radius: 0.5rem; color: inherit; text-decoration: none; }
             .actions a.primary { border-color: var(--text); background: var(--text); color: var(--bg); }
             [data-error-details] button { padding: 0.25rem 0.75rem; border: 1px solid var(--line); border-radius: 0.5rem; background: none; color: var(--muted); font: inherit; font-size: 0.875rem; cursor: pointer; }
-            [data-error-details] .text-zinc-400 { color: var(--muted); }
-            [data-error-details] .grid { display: grid; }
-            [data-error-details] .contents { display: contents; }
+            [data-error-details] [data-field] { display: contents; }
+            [data-error-details] dt { color: var(--muted); }
             [data-error-details] dt, [data-error-details] dd { margin: 0; text-align: left; }
-            [data-error-details] dl { grid-template-columns: auto 1fr; gap: 0.25rem 1rem; font-size: 0.75rem; }
+            [data-error-details] [data-error-block] { display: grid; grid-template-columns: auto 1fr; gap: 0.25rem 1rem; font-size: 0.75rem; }
             [data-error-details] dd { overflow-wrap: anywhere; color: var(--muted); font-variant-numeric: tabular-nums; }
-            [data-error-details] > div:last-of-type { display: flex; justify-content: center; margin-top: 0.75rem; }
+            [data-error-details] > div:has([data-error-copy]) { display: flex; justify-content: center; margin-top: 0.75rem; }
             [data-error-details] { width: 100%; max-width: 24rem; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--line); }
         </style>
     </head>

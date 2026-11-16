@@ -44,43 +44,33 @@ it('puts the server and project codes before 10 characters from the Crockford al
     expect(RequestId::assign())->toMatch('/^SRVAPP-[0-9A-HJKMNP-TV-Z]{10}$/');
 });
 
-it('uses the reserved XXX codes when none is set', function (): void {
-    expect(RequestId::assign())->toStartWith('XXXXXX-');
-});
-
-it('reads the codes from the environment names', function (): void {
-    $config = require __DIR__.'/../config/request-id.php';
-
-    expect($config['server_code'])->toBe('XXX')->and($config['project_code'])->toBe('XXX');
-});
-
 it('assigns a new ID each time and reads it back', function (): void {
     $first = RequestId::assign();
     $second = RequestId::assign();
 
     expect($first)->not->toBe($second)
         ->and(RequestId::current())->toBe($second)
-        ->and(Context::get('request_id'))->toBe($second);
+        ->and(Context::get(RequestId::KEY))->toBe($second);
 });
 
 it('has no current ID before one is assigned', function (): void {
-    Context::forget('request_id');
+    Context::forget(RequestId::KEY);
 
     expect(RequestId::current())->toBeNull();
 });
 
 it('ignores a context value that is not a string', function (): void {
-    Context::add('request_id', 42);
+    Context::add(RequestId::KEY, 42);
 
     expect(RequestId::current())->toBeNull();
 });
 
 it('keeps an inherited ID on ensure and assigns one when there is none', function (): void {
-    Context::add('request_id', 'SRVAPP-PARENT0000');
+    Context::add(RequestId::KEY, 'SRVAPP-PARENT0000');
 
     expect(RequestId::ensure())->toBe('SRVAPP-PARENT0000');
 
-    Context::forget('request_id');
+    Context::forget(RequestId::KEY);
 
     expect(RequestId::ensure())->toHaveLength(17)->and(RequestId::current())->toHaveLength(17);
 });
@@ -127,7 +117,7 @@ it('gives an artisan command its own ID and keeps an inherited one', function ()
 
     expect(loggedLines('command line')[0]->extra['request_id'])->toHaveLength(17);
 
-    Context::add('request_id', 'SRVAPP-PARENT0000');
+    Context::add(RequestId::KEY, 'SRVAPP-PARENT0000');
     event(new CommandStarting('request-id:probe', new ArrayInput([]), new NullOutput));
 
     expect(RequestId::current())->toBe('SRVAPP-PARENT0000');

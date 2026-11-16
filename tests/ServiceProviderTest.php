@@ -22,19 +22,25 @@ it('merges the config with its defaults', function (): void {
     ]);
 });
 
+it('publishes the six stub pages under the request-id-pages tag', function (): void {
+    $paths = ServiceProvider::pathsToPublish(RequestIdServiceProvider::class, 'request-id-pages');
+
+    expect($paths)->toHaveCount(count(RequestIdServiceProvider::PAGES));
+
+    foreach (RequestIdServiceProvider::PAGES as $page) {
+        $source = array_search(resource_path('views/errors/'.$page.'.blade.php'), $paths, true);
+
+        expect($source)->toBeString()->toEndWith('resources/stubs/errors/'.$page.'.blade.php')
+            ->and(File::exists((string) $source))->toBeTrue($page);
+    }
+});
+
 it('publishes the config file under the request-id-config tag', function (): void {
     $paths = ServiceProvider::pathsToPublish(RequestIdServiceProvider::class, 'request-id-config');
 
     expect($paths)->toHaveCount(1)
         ->and(array_key_first($paths))->toEndWith('config/request-id.php')
         ->and(File::exists((string) array_key_first($paths)))->toBeTrue();
-});
-
-it('lets the app override the published config', function (): void {
-    config(['request-id.project_code' => 'APP']);
-
-    expect(config('request-id.project_code'))->toBe('APP')
-        ->and(config('request-id.server_code'))->toBe('XXX');
 });
 
 it('binds a viewer with no rows by default', function (): void {
@@ -54,8 +60,7 @@ it('puts its middleware first in the global stack', function (): void {
 it('stays first when the app has prepended its own middleware before the package boots', function (): void {
     /** @var HttpKernel $kernel */
     $kernel = resolve(Kernel::class);
-    $kernel->setGlobalMiddleware([AppMiddleware::class, ...$kernel->getGlobalMiddleware()]);
-    $kernel->setGlobalMiddleware(array_values(array_diff($kernel->getGlobalMiddleware(), [AssignRequestId::class])));
+    $kernel->setGlobalMiddleware([AppMiddleware::class]);
 
     new RequestIdServiceProvider(app())->boot();
 

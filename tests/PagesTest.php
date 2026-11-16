@@ -6,22 +6,17 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
-
-const PAGES = ['layout', '403', '404', '419', '500', '503'];
+use Illuminate\Support\Facades\View;
+use Rozkalns\RequestId\RequestId;
 
 beforeEach(function (): void {
-    $this->publishPages();
+    config(['view.paths' => [__DIR__.'/../resources/stubs']]);
+    View::replaceNamespace('errors', [__DIR__.'/../resources/stubs/errors']);
 
     Route::get('/boom', fn () => throw new RuntimeException('SQLSTATE secret'));
     Route::get('/forbidden', fn () => abort(403, 'Plan 17 belongs to another group'));
     Route::get('/missing-model', fn () => throw (new ModelNotFoundException)->setModel('Secret\\Ledger', [17]));
     Route::get('/expired', fn () => abort(419));
-});
-
-it('copies the six stub files into the app views under the request-id-pages tag', function (): void {
-    foreach (PAGES as $page) {
-        expect(File::exists(resource_path('views/errors/'.$page.'.blade.php')))->toBeTrue($page);
-    }
 });
 
 it('renders each published page with its code, title and the request ID block', function (string $path, int $status, string $title): void {
@@ -36,16 +31,16 @@ it('renders each published page with its code, title and the request ID block', 
 ]);
 
 it('renders the 503 page without a block when no request ID exists', function (): void {
-    Context::forget('request_id');
+    Context::forget(RequestId::KEY);
 
     $html = view('errors::503')->render();
 
-    expect($html)->toContain('Maintenance')->not->toContain('data-error-block');
+    expect($html)->toContain('Maintenance')->not->toContain('<dl');
 });
 
 it('names the app only through its config value and loads nothing from outside', function (): void {
     config(['app.name' => 'Probe App']);
-    Context::forget('request_id');
+    Context::forget(RequestId::KEY);
 
     $html = view('errors::404')->render();
 
@@ -53,7 +48,7 @@ it('names the app only through its config value and loads nothing from outside',
         ->not->toContain('<script src')->not->toContain('<link ')->not->toContain('<img')->not->toContain('@import')->not->toContain('url(')
         ->toContain('prefers-color-scheme: dark')
         ->and(substr_count($html, '<style>'))->toBe(1)
-        ->and(File::get(resource_path('views/errors/layout.blade.php')))->not->toContain('http');
+        ->and(File::get(__DIR__.'/../resources/stubs/errors/layout.blade.php'))->not->toContain('http');
 });
 
 it('shows no exception detail on the 500, 403 and missing-model 404 pages', function (string $path, int $status): void {
@@ -66,7 +61,6 @@ it('shows no exception detail on the 500, 403 and missing-model 404 pages', func
         ->not->toContain('another group')
         ->not->toContain('RuntimeException')
         ->not->toContain('ModelNotFoundException')
-        ->not->toContain('Secret\\Ledger')
         ->not->toContain('Ledger')
         ->not->toContain('HttpException')
         ->not->toContain('Stack trace')

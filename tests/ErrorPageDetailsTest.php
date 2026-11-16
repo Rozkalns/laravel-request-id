@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Route;
-use Rozkalns\RequestId\Contracts\ErrorPageViewer;
 use Rozkalns\RequestId\ErrorPageDetails;
 use Rozkalns\RequestId\RequestId;
 
@@ -31,7 +30,7 @@ function livewireRequest(string $pagePath, string $pageMethod = 'GET'): Request
 }
 
 it('is null without a request ID', function (): void {
-    Context::forget('request_id');
+    Context::forget(RequestId::KEY);
 
     expect(ErrorPageDetails::current())->toBeNull();
 });
@@ -84,26 +83,14 @@ it('shows the page path of a Livewire update on a route that does not exist', fu
 });
 
 it('adds the rows of a bound viewer after the ID, the time and the path', function (): void {
-    app()->bind(ErrorPageViewer::class, fn (): ErrorPageViewer => new class implements ErrorPageViewer
-    {
-        public function rows(Request $request): array
-        {
-            return ['User' => 'Egle', 'Role' => 'Teacher'];
-        }
-    });
+    bindViewer(fn (): array => ['User' => 'Egle', 'Role' => 'Teacher']);
     RequestId::assign();
 
     expect(ErrorPageDetails::current()?->rows)->toBe(['User' => 'Egle', 'Role' => 'Teacher']);
 });
 
 it('falls back to the ID, the time and the path when the viewer throws', function (): void {
-    app()->bind(ErrorPageViewer::class, fn (): ErrorPageViewer => new class implements ErrorPageViewer
-    {
-        public function rows(Request $request): array
-        {
-            throw new RuntimeException('database is down');
-        }
-    });
+    bindViewer(fn (): array => throw new RuntimeException('database is down'));
     $id = RequestId::assign();
 
     $details = ErrorPageDetails::current();

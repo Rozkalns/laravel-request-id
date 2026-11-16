@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Context;
-use Rozkalns\RequestId\Contracts\ErrorPageViewer;
 use Rozkalns\RequestId\RequestId;
 
 const DEFAULT_WRAPPER_CLASS = 'mt-8 w-full max-w-sm border-t border-zinc-200 pt-4 dark:border-zinc-700';
@@ -28,13 +27,7 @@ it('renders the rows, the default copy button and the script', function (): void
 });
 
 it('lists the ID first, then the time and the path, then the viewer rows', function (): void {
-    app()->bind(ErrorPageViewer::class, fn (): ErrorPageViewer => new class implements ErrorPageViewer
-    {
-        public function rows(Request $request): array
-        {
-            return ['User' => 'Egle', 'Empty' => ''];
-        }
-    });
+    bindViewer(fn (): array => ['User' => 'Egle', 'Empty' => '']);
     RequestId::assign();
 
     $html = Blade::render('<x-request-id::details />');
@@ -45,7 +38,7 @@ it('lists the ID first, then the time and the path, then the viewer rows', funct
 });
 
 it('renders nothing without a request ID', function (): void {
-    Context::forget('request_id');
+    Context::forget(RequestId::KEY);
 
     expect(trim(Blade::render('<x-request-id::details />')))->toBe('');
 });

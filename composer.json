@@ -1,0 +1,80 @@
+{
+    "name": "rozkalns/laravel-request-id",
+    "description": "A request ID for every web request, command and job, with a detail block for error pages",
+    "keywords": ["laravel", "request-id", "error-pages", "logging"],
+    "license": "Beerware",
+    "authors": [
+        {
+            "name": "Roberts Rožkalns",
+            "email": "roberts.rozkalns@me.com"
+        }
+    ],
+    "require": {
+        "php": "^8.5.0",
+        "illuminate/contracts": "^13.0",
+        "illuminate/http": "^13.0",
+        "illuminate/routing": "^13.0",
+        "illuminate/support": "^13.0",
+        "illuminate/view": "^13.0"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.24.0",
+        "livewire/livewire": "^4.0",
+        "orchestra/testbench": "^11.0",
+        "peckphp/peck": "^0.3.0",
+        "pestphp/pest": "^4.1.0",
+        "pestphp/pest-plugin-type-coverage": "^4.0.2",
+        "phpstan/phpstan": ">=2.1.26 <2.3.5",
+        "rector/rector": "^2.1.7",
+        "sentry/sentry-laravel": "^4.0",
+        "symfony/var-dumper": "^8.0.8"
+    },
+    "suggest": {
+        "sentry/sentry-laravel": "Tags every Sentry or GlitchTip event with the request ID",
+        "livewire/livewire": "Shows the page path, not the update URL, in the block of a failed Livewire request"
+    },
+    "autoload": {
+        "psr-4": {
+            "Rozkalns\\RequestId\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Rozkalns\\RequestId\\RequestIdServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "sort-packages": true,
+        "preferred-install": "dist",
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "scripts": {
+        "lint": "pint",
+        "refactor": "rector",
+        "test:type-coverage": "pest --type-coverage --exactly=100 --memory-limit=512M",
+        "test:typos": "peck",
+        "test:lint": "pint --test",
+        "test:unit": "XDEBUG_MODE=coverage pest --coverage --exactly=100",
+        "test:types": "phpstan --memory-limit=512M",
+        "test:refactor": "rector --dry-run",
+        "test": [
+            "@test:lint",
+            "@test:type-coverage",
+            "@test:typos",
+            "@test:unit",
+            "@test:types",
+            "@test:refactor"
+        ]
+    }
+}

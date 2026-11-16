@@ -1,0 +1,2 @@
+providers:
+  - Rozkalns\RequestId\RequestIdServiceProvider

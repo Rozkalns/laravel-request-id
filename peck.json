@@ -1,0 +1,14 @@
+{
+    "preset": "laravel",
+    "ignore": {
+        "words": [
+            "php",
+            "testbench",
+            "livewire",
+            "ulid",
+            "lv",
+            "en"
+        ],
+        "paths": []
+    }
+}

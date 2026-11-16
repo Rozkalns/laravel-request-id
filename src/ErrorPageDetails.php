@@ -9,6 +9,7 @@ use Illuminate\Routing\Route;
 use Illuminate\Routing\Router;
 use Livewire\Livewire;
 use Rozkalns\RequestId\Contracts\ErrorPageViewer;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Throwable;
 
 final readonly class ErrorPageDetails
@@ -34,16 +35,19 @@ final readonly class ErrorPageDetails
         }
 
         try {
-            $guest = new self($requestId, self::time(), self::path(request()));
+            $time = self::time();
+            $path = self::path(request());
         } catch (Throwable) {
             return new self($requestId, '', '/');
         }
 
         try {
-            return new self($guest->requestId, $guest->time, $guest->path, resolve(ErrorPageViewer::class)->rows(request()));
+            $rows = resolve(ErrorPageViewer::class)->rows(request());
         } catch (Throwable) {
-            return $guest;
+            $rows = [];
         }
+
+        return new self($requestId, $time, $path, $rows);
     }
 
     public static function path(Request $request): string
@@ -78,7 +82,7 @@ final readonly class ErrorPageDetails
     {
         try {
             return resolve(Router::class)->getRoutes()->match(Request::create($path, $httpMethod));
-        } catch (Throwable) {
+        } catch (HttpExceptionInterface) {
             return null;
         }
     }

@@ -14,8 +14,6 @@ final class Details extends Component
     /** @var array<string, string> label => value: the ID, the time and the path first, then the viewer's rows */
     public readonly array $rows;
 
-    private readonly bool $hasRequestId;
-
     /**
      * @param  string  $class  classes of the wrapper
      */
@@ -24,19 +22,18 @@ final class Details extends Component
     ) {
         $details = ErrorPageDetails::current();
 
-        $this->hasRequestId = $details instanceof ErrorPageDetails;
-        $this->rows = array_filter([
-            Lang::string('request-id::errors.request_id') => $details->requestId ?? '',
-            Lang::string('request-id::errors.time') => $details->time ?? '',
-            Lang::string('request-id::errors.path') => $details->path ?? '',
-            ...$details->rows ?? [],
-        ], filled(...));
+        $this->rows = $details instanceof ErrorPageDetails ? array_filter([
+            Lang::string('request-id::errors.request_id') => $details->requestId,
+            Lang::string('request-id::errors.time') => $details->time,
+            Lang::string('request-id::errors.path') => $details->path,
+            ...$details->rows,
+        ], filled(...)) : [];
     }
 
     #[\Override]
     public function shouldRender(): bool
     {
-        return $this->hasRequestId;
+        return $this->rows !== [];
     }
 
     #[\Override]

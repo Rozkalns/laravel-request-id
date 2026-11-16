@@ -13,7 +13,7 @@ final class RequestId
 
     private const int LENGTH = 10;
 
-    private const string KEY = 'request_id';
+    public const string KEY = 'request_id';
 
     public static function assign(): string
     {

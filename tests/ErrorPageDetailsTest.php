@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Context;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Route;
 use Rozkalns\RequestId\ErrorPageDetails;
 use Rozkalns\RequestId\RequestId;
@@ -110,4 +112,43 @@ it('falls back to the ID alone when the time cannot be built', function (): void
     expect($details?->requestId)->toBe($id)
         ->and($details?->time)->toBe('')
         ->and($details?->path)->toBe('/');
+});
+
+it('reports a failure in the block instead of hiding it', function (): void {
+    Exceptions::fake();
+    bindViewer(fn (): array => throw new RuntimeException('database is down'));
+    RequestId::assign();
+
+    ErrorPageDetails::current();
+    config(['request-id.timezone' => 'Not/A_Zone']);
+    ErrorPageDetails::current();
+
+    Exceptions::assertReported(fn (RuntimeException $exception): bool => $exception->getMessage() === 'database is down');
+    Exceptions::assertReportedCount(2);
+});
+
+it('still builds the block when reporting the failure fails too', function (): void {
+    app()->instance(ExceptionHandler::class, new class implements ExceptionHandler
+    {
+        public function report(Throwable $e): void
+        {
+            throw $e;
+        }
+
+        public function shouldReport(Throwable $e): bool
+        {
+            return true;
+        }
+
+        public function render($request, Throwable $e): never
+        {
+            throw $e;
+        }
+
+        public function renderForConsole($output, Throwable $e): void {}
+    });
+    bindViewer(fn (): array => throw new RuntimeException('database is down'));
+    $id = RequestId::assign();
+
+    expect(ErrorPageDetails::current()?->requestId)->toBe($id);
 });

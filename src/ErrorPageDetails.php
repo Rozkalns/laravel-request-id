@@ -37,17 +37,29 @@ final readonly class ErrorPageDetails
         try {
             $time = self::time();
             $path = self::path(request());
-        } catch (Throwable) {
+        } catch (Throwable $throwable) {
+            self::reportQuietly($throwable);
+
             return new self($requestId, '', '/');
         }
 
         try {
             $rows = resolve(ErrorPageViewer::class)->rows(request());
-        } catch (Throwable) {
+        } catch (Throwable $throwable) {
+            self::reportQuietly($throwable);
             $rows = [];
         }
 
         return new self($requestId, $time, $path, $rows);
+    }
+
+    private static function reportQuietly(Throwable $exception): void
+    {
+        try {
+            report($exception);
+        } catch (Throwable) {
+            //
+        }
     }
 
     public static function path(Request $request): string
